@@ -10,7 +10,7 @@
 
   <groupId>org.avaje.resteasy</groupId>
   <artifactId>avaje-resteasy-guice</artifactId>
-  <version>1.1.1</version>
+  <version>1.1.2-SNAPSHOT</version>
 
   <name>avaje-resteasy-guice</name>
   <packaging>jar</packaging>
