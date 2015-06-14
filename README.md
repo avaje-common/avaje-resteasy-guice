@@ -6,7 +6,7 @@ Extensions for using Resteasy with Guice and WebSockets
 <dependency>
   <groupId>org.avaje.resteasy</groupId>
   <artifactId>avaje-resteasy-guice</artifactId>
-  <version>1.1.1</version>
+  <version>1.1.2</version>
 </dependency>
 ```
 
