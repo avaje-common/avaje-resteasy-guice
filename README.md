@@ -1,6 +1,16 @@
 # avaje-resteasy-guice
 Extensions for using Resteasy with Guice and WebSockets 
 
+### Maven 
+```xml
+<dependency>
+  <groupId>org.avaje.resteasy</groupId>
+  <artifactId>avaje-resteasy-guice</artifactId>
+  <version>1.1.1</version>
+</dependency>
+```
+
+
 ## Bootstrap
 Provides an extension to GuiceResteasyBootstrapServletContextListener that will detect eager singleton WebSocket server endpoints and registers them with the servlet container.
 
