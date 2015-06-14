@@ -69,51 +69,42 @@ public class Bootstrap extends GuiceResteasyBootstrapServletContextListener {
     Map<Key<?>, Binding<?>> allBindings = injector.getAllBindings();
 
     // loop all the Guice bindings looking for @ServerEndpoint singletons
-    for(Map.Entry<Key<?>, Binding<?>> entry : allBindings.entrySet()) {
+    for (Map.Entry<Key<?>, Binding<?>> entry : allBindings.entrySet()) {
 
       final Binding<?> binding = entry.getValue();
-      final ServerEndpoint serverEndpoint = getServerEndpointAnnotation(entry);
-      if (serverEndpoint != null) {
-        // it is a WebSocket endpoint
-        binding.acceptScopingVisitor(new DefaultBindingScopingVisitor() {
+      binding.acceptScopingVisitor(new DefaultBindingScopingVisitor() {
 
-          @Override
-          public Object visitEagerSingleton() {
-            // also a eager singleton so register it
-            registerWebSocketEndpoint(binding, serverEndpoint);
-            return null;
-          }
-        });
+        @Override
+        public Object visitEagerSingleton() {
+          // also a eager singleton so register it
+          registerWebSocketEndpoint(binding);
+          return null;
+        }
+      });
+    }
+  }
+
+  /**
+   * Check if the binding is a WebSocket endpoint.  If it is then register the webSocket
+   * server endpoint with the servlet container.
+   */
+  protected void registerWebSocketEndpoint(Binding<?> binding) {//}, ServerEndpoint serverEndpoint) {
+
+    Object instance = binding.getProvider().get();
+    Class<?> instanceClass = instance.getClass();
+    ServerEndpoint serverEndpoint = instanceClass.getAnnotation(ServerEndpoint.class);
+    if (serverEndpoint != null) {
+      try {
+        // register with the servlet container such that the Guice created singleton instance
+        // is the instance that is used (and not an instance created per request etc)
+        log.debug("registering ServerEndpoint [{}] with servlet container", instanceClass);
+        BasicWebSocketConfigurator configurator = new BasicWebSocketConfigurator(instance);
+        serverContainer.addEndpoint(new BasicWebSocketEndpointConfig(instanceClass, serverEndpoint, configurator));
+
+      } catch (Exception e) {
+        log.error("Error registering WebSocket Singleton " + instance + " with the servlet container", e);
       }
     }
   }
-
-  /**
-   * Return the ServerEndpoint annotation (or null if it is not a webSocket endpoint).
-   */
-  protected ServerEndpoint getServerEndpointAnnotation(Map.Entry<Key<?>, Binding<?>> entry) {
-
-    Class<?> rawType = entry.getKey().getTypeLiteral().getRawType();
-    return rawType.getAnnotation(ServerEndpoint.class);
-  }
-
-  /**
-   * Register the webSocket server endpoint with the servlet container.
-   */
-  protected void registerWebSocketEndpoint(Binding<?> binding, ServerEndpoint serverEndpoint) {
-
-    Object endpointInstance = binding.getProvider().get();
-    try {
-      // register with the servlet container such that the Guice created singleton instance
-      // is the instance that is used (and not an instance created per request etc)
-      log.debug("registering ServerEndpoint [{}] with servlet container", endpointInstance.getClass());
-      BasicWebSocketConfigurator configurator = new BasicWebSocketConfigurator(endpointInstance);
-      serverContainer.addEndpoint(new BasicWebSocketEndpointConfig(endpointInstance.getClass(),serverEndpoint, configurator));
-
-    } catch (Exception e) {
-      log.error("Error registering WebSocket Singleton "+endpointInstance+" with the servlet container", e);
-    }
-  }
-
 
 }
